@@ -26,6 +26,12 @@ def get_brewery_count(state: str) -> Dict:
     Returns:
         Dict: Dictionary with state name and brewery count. For example: {'state': 'maryland', 'count': 109}.
     """
+    
+
+
+
+
+
     print(f"get_brewery_count, state={state}, entry")
     count = 0
 
@@ -34,7 +40,23 @@ def get_brewery_count(state: str) -> Dict:
     The OpenBrewery DB API URL is of the form "https://api.openbrewerydb.org/v1/breweries?by_state={state}&per_page=200&page={page}"
     keep incrementing the page number until the response json == [] or status_code != 200
     """
-    
+    page = 1 
+    while True:
+        url = f"https://api.openbrewerydb.org/v1/breweries?by_state={state}&per_page=200&page={page}"
+        resp = req.get(url)
+
+        if resp.status_code != 200:
+            print(f"Error fetching {state}, page {page}, status={resp.status_code}")
+            break
+
+        data = resp.json()
+        if not data:
+            break
+
+        count += len(data)
+        page += 1
+
+
     print(f"get_brewery_count, state={state}, exiting")
     return dict(state=state, brewery_count=count)
 
@@ -47,10 +69,9 @@ async def async_get_brewery_count(state: str) -> Dict:
     Returns:
         Dict: Dictionary with state name and brewery count
     """
-
-    """
-    YOUR CODE HERE
-    """
+    # My code here: 
+    return await asyncio.to_thread(get_brewery_count, state)
+    
     
 async def get_brewery_counts_for_states(states: List[str]) -> List[Dict]:
     """
@@ -61,10 +82,10 @@ async def get_brewery_counts_for_states(states: List[str]) -> List[Dict]:
     Returns:
          List[Dict]: List of dictionaries containing state name and brewery count
     """
-
-    """
-    YOUR CODE HERE
-    """
+    # YOUR CODE HERE
+    tasks = [asyncio.create_task(async_get_brewery_count(s)) for s in states]
+    return await asyncio.gather(*tasks)
+    
 
 if __name__ == "__main__":
     states = ['district_of_columbia', 'maryland', 'new_york', 'virginia']
